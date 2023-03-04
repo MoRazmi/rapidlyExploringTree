@@ -6,13 +6,6 @@ class node_position:
       self.x = x
       self.y = y
 
-INFINITY = 10000
-
-class searchCondition(Enum):
-     """Enum defintion for Open and close nodes"""
-     CLOSE = True
-     OPEN = False
-
 class Node:
     def __init__(self, id):
         self.id = id
