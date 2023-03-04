@@ -1,0 +1,3 @@
+import graphSearch_csvReader
+
+graphSearch_csvReader.obstacle_extractor()
