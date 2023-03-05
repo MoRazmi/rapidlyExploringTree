@@ -20,7 +20,3 @@ class Node:
     def add_edge(self, neighbor, weight =0):
         """Add edge to the node"""
         self.edges[neighbor] = weight
-
-
-    def close_node(self):
-        self.searchConditionClosed = True

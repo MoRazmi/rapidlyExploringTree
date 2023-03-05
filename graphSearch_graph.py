@@ -28,7 +28,3 @@ class Graph:
         self.nodes[node1].add_edge(node2, weight)
         self.nodes[node2].add_edge(node1, weight)
         graphSearch_csvReader.print_edges(node1, node2, round(float(weight), 3))
-
-
-    def close_node(self, node):
-        self.nodes[node].close_node()
