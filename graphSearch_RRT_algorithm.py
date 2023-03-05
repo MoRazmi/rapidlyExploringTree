@@ -1,5 +1,6 @@
 import graphSearch_graph
 import graphSearch_node
+import graphSearch_csvReader
 import random
 import math
 import graphSearch_obstacle
@@ -24,7 +25,7 @@ def make_A_random_node(graph, x_start, x_end):
 
 
 def is_nodesCandidate_edge_hit_obstacle(x,y, node, obstacle):
-    line = LineString([(x,y),(node.position.x, node.position.y)])
+    line = LineString([(x,y),(node.position[0], node.position[1])])
     circle = Point(obstacle.x, obstacle.y).buffer(obstacle.diameter/2)
     intersection = line.intersection(circle)
     if intersection.is_empty:
@@ -33,23 +34,53 @@ def is_nodesCandidate_edge_hit_obstacle(x,y, node, obstacle):
         return True
 
 def is_nodeCandidate_endge_hits_obtacles(x,y, node, obstacles):
-    for obst_iter in range(obstacles):
-            is_nodesCandidate_edge_hit_obstacle(x,y, node, obstacles[obst_iter] )
+    for obstacle in obstacles.values():
+        if is_nodesCandidate_edge_hit_obstacle(x, y, node, obstacle):
+            return True
+    return False
 
 def calculate_nodeCandidate_distance(x,y, node):
-    return math.sqrt((x-node.position.x)**2 + (y - y.node.position.y)**2)
+    return math.sqrt((x-node.position[0])**2 + (y -node.position[1])**2)
+
+def calculate_two_position_distance(pos1, pos2):
+    return math.sqrt((pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2)
 
 def find_closest_node_with_weight(x,y,graph):
-    node_distances = {}
-    for iter in range(len(graph.nodes)):
-        if not is_nodeCandidate_endge_hits_obtacles(x,y,graph.nodes[iter], graph.obstacles):
-            node_distances.append(graph.nodes[iter].id, calculate_nodeCandidate_distance(x,y, graph.nodes[iter]))
-    sorted_ditances = sorted(node_distances, key=lambda x: x[1])
-    return(sorted_ditances[0])
+    node_distances = []
+    for node_id in graph.nodes.keys():
+       if not is_nodeCandidate_endge_hits_obtacles(x, y, graph.nodes[node_id], graph.obstacles):
+         node_distances.append((graph.nodes[node_id].id, calculate_nodeCandidate_distance(x, y, graph.nodes[node_id])))
+    sorted_distances = sorted(node_distances, key=lambda x: x[1])
+    if(sorted_distances):
+        return(sorted_distances[0])
+    else:
+        return False
 
-def run_algorithm(graph, position_start, position_end):
-    candidate_position = make_A_random_node(graph, position_start, position_end)
-    node_weight = find_closest_node_with_weight(candidate_position[0], candidate_position[1])
+def run_algorithm(graph, position_start, position_end, tree_size):
+    tree_node = 2
     graph.add_node(1)
-    graph.add_position(1, candidate_position[0], candidate_position[1])
-    graph.add_edge(1, node_weight[0], node_weight[1])
+    graph.add_position(1, position_start[0], position_start[1])
+    graphSearch_csvReader.print_nodes(1, position_start[0], position_start[1], 0)
+    while tree_node < tree_size:
+        node_weight = False
+        while not node_weight:
+            candidate_position = make_A_random_node(graph, position_start, position_end)
+            node_weight = find_closest_node_with_weight(candidate_position[0], candidate_position[1], graph)
+        graph.add_node(tree_node)
+        dist_to_end = calculate_two_position_distance(candidate_position, position_end)
+        graph.add_position(tree_node, candidate_position[0], candidate_position[1])
+        graphSearch_csvReader.print_nodes(tree_node, candidate_position[0], candidate_position[1], dist_to_end)
+        graph.add_edge(tree_node, node_weight[0], node_weight[1])
+        if (dist_to_end < 0.1):
+            print(candidate_position)
+            end_node_id = len(graph.nodes)+1
+            graph.add_node(end_node_id)
+            graph.add_position(end_node_id, position_end[0], position_end[1])
+            graphSearch_csvReader.print_nodes(end_node_id, position_end[0], position_end[1], dist_to_end)
+            graph.add_edge(tree_node, end_node_id, dist_to_end)
+            print("SUCCESS")
+            print(tree_node)
+            return True
+        tree_node = tree_node + 1
+    print("FAILURE")
+    return False
